@@ -71,7 +71,7 @@ int main() {
     const auto deadline = t0 + chrono::milliseconds(980);
 
     unsigned hw = max(1u, thread::hardware_concurrency());
-    unsigned T = min(4u, max(1u, hw));
+    unsigned T = max(1u, hw);
     const uint64_t BYTES_PER_THREAD = 4ULL << 20;
     const uint64_t ODDS_PER_THREAD  = BYTES_PER_THREAD * 8ULL;
     const uint64_t SPAN_PER_THREAD  = ODDS_PER_THREAD << 1; 
@@ -133,6 +133,7 @@ int main() {
 }
 
 
-// initial attempt:  8,719,624-th prime (155,189,239)
-// second attempt:  14,630,843-th prime (268,435,399)
-// third attempt:   41,405,139-th prime (805,306,357)
+// initial attempt:  8,719,624-th prime   (155,189,239)
+// second attempt:  14,630,843-th prime   (268,435,399)
+// third attempt:   41,405,139-th prime   (805,306,357)
+// third attempt 2: 54,400,028-th prime (1,073,741,789)
