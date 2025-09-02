@@ -16,64 +16,41 @@ static vector<int> simple_primes_upto(int n) {
     return primes;
 }
 
-static pair<uint64_t,uint64_t>
-sieve_segment(uint64_t low, uint64_t high, const vector<int>& base, int pi_max,
-              vector<uint64_t>& bits)
-{
+static pair<uint64_t,uint64_t> sieve_segment(uint64_t low, uint64_t high, const vector<int>& base, int pi_max, vector<uint64_t>& bits) {
     if ((low & 1) == 0) ++low;
     if (high <= low) return {0, 0};
 
     const uint64_t lenOdds = (high - low) >> 1;
     const size_t words = (size_t)((lenOdds + 63) >> 6);
+    std::fill(bits.begin(), bits.begin() + words, 0ULL);
 
-    fill(bits.begin(), bits.begin() + words, 0ULL);
-    {
-        const uint64_t p = 3;
-        uint64_t start = (low + p - 1)/p * p;
+    auto mark_with = [&](uint64_t p){
+        uint64_t p2 = (uint64_t)p * (uint64_t)p;
+        uint64_t start = ((low + p - 1) / p) * p;
+        if (start < p2) start = p2;
         if ((start & 1) == 0) start += p;
-        uint64_t idx = (start - low) >> 1;
-        for (uint64_t j = idx; j < lenOdds; j += p)
-            bits[(size_t)(j >> 6)] |= (1ULL << (j & 63));
-    }
-    {
-        const uint64_t p = 5;
-        uint64_t start = (low + p - 1)/p * p;
-        if ((start & 1) == 0) start += p;
-        uint64_t idx = (start - low) >> 1;
-        for (uint64_t j = idx; j < lenOdds; j += p)
-            bits[(size_t)(j >> 6)] |= (1ULL << (j & 63));
-    }
+        if (start >= high) return;
 
-    for (int k = 3; k <= pi_max; ++k) {
-        const uint64_t p = (uint64_t)base[k];
-        uint64_t start = (low + p - 1) / p * p;
-        if ((start & 1) == 0) start += p;
-        uint64_t idx = (start - low) >> 1;
+        uint64_t idx  = (start - low) >> 1;
         const uint64_t step = p;
-        for (uint64_t j = idx; j < lenOdds; j += step) {
-            bits[(size_t)(j >> 6)] |= (1ULL << (j & 63));
-        }
-    }
-    
-    uint64_t count = 0;
-    uint64_t lastPrime = 0;
+        for (uint64_t j = idx; j < lenOdds; j += step) bits[(size_t)(j >> 6)] |= (1ULL << (j & 63));
+    };
+
+    mark_with(3);
+    mark_with(5);
+
+    for (int k = 3; k <= pi_max; ++k) mark_with((uint64_t)base[k]);
+    uint64_t count = 0, lastPrime = 0;
     if (words) {
         const unsigned tailBits = (unsigned)(lenOdds & 63U);
         const uint64_t tailMask = (tailBits == 0 ? ~0ULL : ((1ULL << tailBits) - 1ULL));
 
         size_t wEnd = (tailBits == 0 ? words : words - 1);
-        for (size_t w = 0; w < wEnd; ++w) {
-            count += (uint64_t)__builtin_popcountll(~bits[w]);
-        }
-        if (tailBits) {
-            const uint64_t inv = ~bits[words - 1] & tailMask;
-            count += (uint64_t)__builtin_popcountll(inv);
-        }
+        for (size_t w = 0; w < wEnd; ++w) count += (uint64_t)__builtin_popcountll(~bits[w]);
+        if (tailBits) count += (uint64_t)__builtin_popcountll((~bits[words - 1]) & tailMask);
         for (size_t w = words; w-- > 0;) {
             uint64_t inv = ~bits[w];
-            if (w == words - 1 && (lenOdds & 63U)) {
-                inv &= tailMask;
-            }
+            if (w == words - 1 && tailBits) inv &= tailMask;
             if (inv) {
                 int b = 63 - __builtin_clzll(inv);
                 uint64_t j = (w << 6) + (unsigned)b;
@@ -140,5 +117,5 @@ int main() {
     return 0;
 }
 
-// initial attempt: 4,360,025-th prime (155,189,239)
-// second attempt: 14,629,450-th prime (268,435,399)
+// initial attempt: 8,719,624-th prime (155,189,239)
+// second attempt: 14,630,843-th prime (268,435,399)

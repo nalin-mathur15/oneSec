@@ -2,7 +2,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-// Return the n-th prime (1-based, so nth_prime(1)=2).
 int nth_prime(int n) {
     if (n == 1) return 2;
     // Overestimate size using n log n + n log log n (Rosser–Schoenfeld).
@@ -18,7 +17,7 @@ int nth_prime(int n) {
         count++;
         if (count == n) return i;
     }
-    return -1; // shouldn't happen
+    return -1;
 }
 
 int main() {
